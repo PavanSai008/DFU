@@ -153,3 +153,17 @@ If the image is classified as Normal, ischemia returns "Not Applicable".
 - Vitals are optional — if not provided, ischemia returns "Not Applicable".
 - The model expects 224×224 RGB images normalised with EfficientNet's `preprocess_input`.
 - For deployment on Render or Railway, set the start command to `python backend/app.py`.
+
+---
+
+## Dataset & Credits
+
+This project uses the **Diabetic Foot Ulcer (DFU) Dataset** from Kaggle:
+
+- **Dataset**: [Diabetic Foot Ulcer DFU Dataset](https://www.kaggle.com/datasets/laithjj/diabetic-foot-ulcer-dfu/data)
+- **Author**: Submitted by Laith Jj on Kaggle
+- **Usage**: Educational and research purposes
+
+**Attribution**: If you use this dataset or trained model, please acknowledge the Kaggle dataset source.
+
+---
