@@ -1,0 +1,68 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large model files (DON'T COMMIT THESE)
+backend/models/model.h5
+backend/models/model.keras
+backend/models/model_weights.weights.h5
+backend/models/model_config.json
+
+# Uploads and temp files
+backend/uploads/
+*.tmp
+*.log
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Colab (local copies)
+/content/
+/sample_data/
+
+# Environment variables
+.env
+.env.local
+
+# Node (if using frontend npm)
+node_modules/
+package-lock.json
