@@ -152,10 +152,11 @@ def load_model():
     from tensorflow.keras import layers, Model
 
     try:
-        # Rebuild exact same architecture used in Colab training
+        log.info("Building EfficientNetB3 architecture...")
         NUM_CLASSES = len(_class_names)
         base = EfficientNetB3(weights=None, include_top=False,
                               input_shape=(224, 224, 3))
+        log.info("Base model created, adding layers...")
         x   = base.output
         x   = layers.GlobalAveragePooling2D()(x)
         x   = layers.BatchNormalization()(x)
@@ -163,11 +164,13 @@ def load_model():
         x   = layers.Dropout(0.4)(x)
         out = layers.Dense(NUM_CLASSES, activation="softmax")(x)
 
+        log.info("Creating full model...")
         _model = Model(base.input, out)
+        log.info(f"Loading weights from {WEIGHTS_FILE}...")
         _model.load_weights(WEIGHTS_FILE)
         log.info(f"Model loaded ✓  input: {_model.input_shape}  classes: {_class_names}")
     except Exception as e:
-        log.error(f"Failed to load model: {e}", exc_info=True)
+        log.error(f"LOAD FAILED: {type(e).__name__}: {e}", exc_info=True)
         _model = None
 
 
