@@ -49,11 +49,6 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path="")
 app.config["MAX_CONTENT_LENGTH"] = MAX_MB * 1024 * 1024
 
-# ── Run on startup regardless of gunicorn or direct python ───────────────────
-with app.app_context():
-    download_weights_if_missing()
-    load_model()
-
 # ── CORS ──────────────────────────────────────────────────────────────────────
 @app.after_request
 def add_cors(r):
@@ -348,7 +343,12 @@ def too_large(e):
     return jsonify({"error": f"File too large. Max {MAX_MB} MB"}), 413
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# ── Startup — runs on both gunicorn and direct python ────────────────────────
+with app.app_context():
+    download_weights_if_missing()
+    load_model()
+
+
 if __name__ == "__main__":
     log.info("DFU API running on http://localhost:5000")
     app.run(debug=True, host="0.0.0.0", port=5000)
