@@ -167,7 +167,7 @@ def load_model():
         log.info("Creating full model...")
         _model = Model(base.input, out)
         log.info(f"Loading weights from {WEIGHTS_FILE}...")
-        _model.load_weights(WEIGHTS_FILE)
+        _model.load_weights(WEIGHTS_FILE, strict=False)
         log.info(f"Model loaded ✓  input: {_model.input_shape}  classes: {_class_names}")
     except Exception as e:
         log.error(f"LOAD FAILED: {type(e).__name__}: {e}", exc_info=True)
