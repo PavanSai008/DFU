@@ -49,6 +49,11 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path="")
 app.config["MAX_CONTENT_LENGTH"] = MAX_MB * 1024 * 1024
 
+# ── Run on startup regardless of gunicorn or direct python ───────────────────
+with app.app_context():
+    download_weights_if_missing()
+    load_model()
+
 # ── CORS ──────────────────────────────────────────────────────────────────────
 @app.after_request
 def add_cors(r):
@@ -75,19 +80,46 @@ def serve_static(filename):
 # 0. Download weights from Google Drive if missing (for Render deployment)
 # ─────────────────────────────────────────────────────────────────────────────
 def download_weights_if_missing():
-    """Download model weights from Google Drive if not present."""
+    """Download model weights from Google Drive if not present.
+    Handles Google's virus scan warning page for large files.
+    """
     if os.path.exists(WEIGHTS_FILE):
+        log.info("Weights already present")
         return
-    
-    import urllib.request
+
+    import urllib.request, re
+
     FILE_ID = "1JyJWyubnnUhLl81aSG3C11JRNjmG55K9"
-    url = f"https://drive.google.com/uc?export=download&id={FILE_ID}"
-    
     os.makedirs(os.path.dirname(WEIGHTS_FILE), exist_ok=True)
     log.info("Downloading model weights from Google Drive...")
+
+    url = f"https://drive.google.com/uc?export=download&id={FILE_ID}"
+    opener = urllib.request.build_opener()
+    opener.addheaders = [("User-Agent", "Mozilla/5.0")]
+
     try:
-        urllib.request.urlretrieve(url, WEIGHTS_FILE)
-        log.info("Weights downloaded ✓")
+        response = opener.open(url)
+        content  = response.read()
+
+        # If Google returned a warning page, extract confirm token
+        if b"confirm=" in content:
+            token_match = re.search(rb'confirm=([^&"]+)', content)
+            if token_match:
+                confirm = token_match.group(1).decode()
+                url_with_token = f"https://drive.google.com/uc?export=download&id={FILE_ID}&confirm={confirm}"
+                response = opener.open(url_with_token)
+                content  = response.read()
+
+        with open(WEIGHTS_FILE, "wb") as f:
+            f.write(content)
+
+        size_mb = os.path.getsize(WEIGHTS_FILE) / 1024 / 1024
+        log.info(f"Weights downloaded ✓ — {size_mb:.1f} MB")
+
+        if size_mb < 1:
+            os.remove(WEIGHTS_FILE)
+            raise RuntimeError("Downloaded file too small — Drive link may be restricted")
+
     except Exception as e:
         log.error(f"Failed to download weights: {e}")
         raise
@@ -318,7 +350,5 @@ def too_large(e):
 
 # ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    download_weights_if_missing()
-    load_model()
     log.info("DFU API running on http://localhost:5000")
     app.run(debug=True, host="0.0.0.0", port=5000)
