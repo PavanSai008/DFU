@@ -72,6 +72,28 @@ def serve_static(filename):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# 0. Download weights from Google Drive if missing (for Render deployment)
+# ─────────────────────────────────────────────────────────────────────────────
+def download_weights_if_missing():
+    """Download model weights from Google Drive if not present."""
+    if os.path.exists(WEIGHTS_FILE):
+        return
+    
+    import urllib.request
+    FILE_ID = "1JyJWyubnnUhLl81aSG3C11JRNjmG55K9"
+    url = f"https://drive.google.com/uc?export=download&id={FILE_ID}"
+    
+    os.makedirs(os.path.dirname(WEIGHTS_FILE), exist_ok=True)
+    log.info("Downloading model weights from Google Drive...")
+    try:
+        urllib.request.urlretrieve(url, WEIGHTS_FILE)
+        log.info("Weights downloaded ✓")
+    except Exception as e:
+        log.error(f"Failed to download weights: {e}")
+        raise
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # 1. Model loading — rebuilds architecture locally, loads weights only
 #    Bypasses all Keras version serialisation issues entirely.
 # ─────────────────────────────────────────────────────────────────────────────
@@ -296,6 +318,7 @@ def too_large(e):
 
 # ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
+    download_weights_if_missing()
     load_model()
     log.info("DFU API running on http://localhost:5000")
     app.run(debug=True, host="0.0.0.0", port=5000)
