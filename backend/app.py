@@ -121,8 +121,8 @@ def download_weights_if_missing():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 1. Model loading — rebuilds architecture locally, loads weights only
-#    Bypasses all Keras version serialisation issues entirely.
+# 1. Model loading — rebuilds architecture locally to match training
+#    so the saved weights can be restored without partial-loading hacks.
 # ─────────────────────────────────────────────────────────────────────────────
 _model       = None
 _class_names = None
@@ -154,7 +154,7 @@ def load_model():
     try:
         log.info("Building EfficientNetB3 architecture...")
         NUM_CLASSES = len(_class_names)
-        base = EfficientNetB3(weights=None, include_top=False,
+        base = EfficientNetB3(weights="imagenet", include_top=False,
                               input_shape=(224, 224, 3))
         log.info("Base model created, adding layers...")
         x   = base.output
@@ -167,7 +167,7 @@ def load_model():
         log.info("Creating full model...")
         _model = Model(base.input, out)
         log.info(f"Loading weights from {WEIGHTS_FILE}...")
-        _model.load_weights(WEIGHTS_FILE, by_name=True)
+        _model.load_weights(WEIGHTS_FILE)
         log.info(f"Model loaded ✓  input: {_model.input_shape}  classes: {_class_names}")
     except Exception as e:
         log.error(f"LOAD FAILED: {type(e).__name__}: {e}", exc_info=True)
