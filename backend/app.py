@@ -310,16 +310,35 @@ def predict():
 
         is_ulcer = top_class.lower() in {"abnormal", "ulcer", "infected"}
 
-        if is_ulcer:
-            ischemia      = assess_ischemia(_float("abi"), _float("spo2"),
-                                            _float("blood_sugar"), _int("age"),
-                                            _int("diabetes_duration"))
-            ischemia_risk = ischemia["risk"]
-            reasons       = ischemia["reasons"]
-            isc_score     = ischemia["score"]
+        # Always assess ischemia if any clinical data is provided
+        has_inputs = any([
+            _float("abi") is not None,
+            _float("spo2") is not None,
+            _float("blood_sugar") is not None,
+            _int("age") is not None,
+            _int("diabetes_duration") is not None
+        ])
+        
+        if has_inputs:
+            ischemia = assess_ischemia(
+                _float("abi"),
+                _float("spo2"),
+                _float("blood_sugar"),
+                _int("age"),
+                _int("diabetes_duration")
+            )
+        
+            isc_score = ischemia["score"]
+            reasons   = ischemia["reasons"]
+        
+            if is_ulcer:
+                ischemia_risk = ischemia["risk"]   # critical context
+            else:
+                # preventive context
+                ischemia_risk = f"{ischemia['risk']} (No ulcer - preventive risk)"
         else:
-            ischemia_risk = "Not Applicable"
-            reasons       = ["No ulcer detected — ischemia assessment skipped"]
+            ischemia_risk = "Not Provided"
+            reasons       = ["No clinical inputs provided"]
             isc_score     = 0
 
         return jsonify({
